@@ -19,6 +19,8 @@ func AuthRequired(adapter *scs_gin_adapter.GinAdapter) gin.HandlerFunc {
 
 		var uid uuid.UUID
 		switch v := val.(type) {
+		case uuid.UUID:
+			uid = v
 		case string:
 			parsed, err := uuid.Parse(v)
 			if err != nil {

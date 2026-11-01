@@ -3,6 +3,7 @@ package main
 import (
 	"link_or_die/internals/config"
 	"link_or_die/internals/handlers"
+	"link_or_die/internals/middleware"
 	"link_or_die/internals/oauth"
 	"link_or_die/internals/services"
 	"link_or_die/internals/store"
@@ -43,14 +44,26 @@ func main() {
 	UserRepo := store.CreateUserRepo(db)
 	AuthService := services.CreateAuthService(UserRepo)
 	AuthHandler := handlers.CreateAuthHandler(cfg, adapter, googleProvider, AuthService)
+	UserService := services.CreateUserService(UserRepo)
+	DashBoardHandler := handlers.CreateDashboardHandler(cfg, adapter, UserService)
 
 	r := gin.Default()
 	r.Use(adapter.LoadAndSave)
 
 	r.GET("/health", AuthHandler.HealthHandler)
 	r.GET("/login", AuthHandler.Login)
+	r.POST("/login", AuthHandler.LoginWithPassword)
+	r.GET("/register", AuthHandler.Register)
+	r.POST("/register", AuthHandler.RegisterWithPassword)
 	r.GET("/auth/google", AuthHandler.GoogleLogin)
 	r.GET("/auth/google/callback", AuthHandler.GoogleCallback)
+
+	authed := r.Group("/")
+	authed.Use(middleware.AuthRequired(adapter))
+	{
+		authed.GET("/dashboard", DashBoardHandler.Dashboard)
+		authed.POST("/logout", AuthHandler.Logout)
+	}
 
 	r.Run(":" + cfg.Port)
 }

@@ -3,9 +3,12 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
+	"link_or_die/internals/apperror"
 	"link_or_die/internals/components"
 	"link_or_die/internals/config"
 	"link_or_die/internals/domains/auth"
+	"link_or_die/internals/domains/user"
 	"link_or_die/internals/oauth"
 	"link_or_die/internals/services"
 	"net/http"
@@ -35,8 +38,83 @@ func (a *AuthHandler) HealthHandler(c *gin.Context) {
 	components.Landing().Render(c.Request.Context(), c.Writer)
 }
 
+func (a *AuthHandler) Register(c *gin.Context) {
+	components.Register(user.RegisterView{}).Render(c.Request.Context(), c.Writer)
+}
+
 func (a *AuthHandler) Login(c *gin.Context) {
+	if a.adapter.Get(c, "userID") != nil {
+		c.Redirect(http.StatusSeeOther, "/dashboard")
+		return
+	}
 	components.Login(auth.LoginView{}).Render(c.Request.Context(), c.Writer)
+}
+
+func (a *AuthHandler) LoginWithPassword(c *gin.Context) {
+	var req user.LoginRequest
+
+	if err := c.ShouldBind(&req); err != nil {
+		components.Login(auth.LoginView{
+			Username: req.Username,
+			Error:    "Username and password are required",
+		}).Render(c.Request.Context(), c.Writer)
+		return
+	}
+
+	u, err := a.svc.LoginWithPassword(c.Request.Context(), req.Username, req.Password)
+	if err != nil {
+		if errors.Is(err, apperror.ErrInvalidCredentials) {
+			components.Login(auth.LoginView{
+				Username: req.Username,
+				Error:    "Invalid username or password",
+			}).Render(c.Request.Context(), c.Writer)
+			return
+		}
+		internalError(c, err)
+		return
+	}
+
+	a.adapter.RenewToken(c)
+	a.adapter.Put(c, "userID", u.ID.String())
+	c.Redirect(http.StatusSeeOther, "/dashboard")
+}
+
+func (a *AuthHandler) RegisterWithPassword(c *gin.Context) {
+	var req user.RegisterRequest
+
+	if err := c.ShouldBind(&req); err != nil {
+		components.Register(user.RegisterView{
+			Username: req.Username,
+			Email:    req.Email,
+			Error:    "Input validation error: username 3-32 chars, valid email, password_len ≥ 8 chars",
+		}).Render(c.Request.Context(), c.Writer)
+		return
+	}
+
+	_, err := a.svc.Register(c.Request.Context(), req)
+	if err != nil {
+		var ve *apperror.ValidationError
+		if errors.As(err, &ve) {
+			components.Register(user.RegisterView{
+				Username: req.Username,
+				Email:    req.Email,
+				Error:    ve.Message,
+			}).Render(c.Request.Context(), c.Writer)
+			return
+		}
+		internalError(c, err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/login")
+}
+
+func (a *AuthHandler) Logout(c *gin.Context) {
+	if err := a.adapter.Destroy(c); err != nil {
+		internalError(c, err)
+		return
+	}
+	c.Redirect(http.StatusSeeOther, "/login")
 }
 
 func randomString(n int) string {

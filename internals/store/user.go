@@ -36,6 +36,33 @@ func (r *UserRepository) GetUserByID(ctx context.Context, userID uuid.UUID) (*us
 	return &u, nil
 }
 
+func (r *UserRepository) GetUserByUserName(ctx context.Context, userName string) (*user.User, string, error) {
+	var u user.User
+	var hash string
+	err := r.db.QueryRow(ctx, `
+		SELECT id, username, email, COALESCE(password_hash, '')
+        FROM users WHERE username = $1 AND password_hash IS NOT NULL
+		`, userName).Scan(&u.ID, &u.Username, &u.Email, &hash)
+	if err != nil {
+		return nil, "", translatePgError(err, "finding user by username")
+	}
+	return &u, hash, nil
+}
+
+func (r *UserRepository) CreateUser(ctx context.Context, username, email, passwordHash string) (*user.User, error) {
+	var u user.User
+	err := r.db.QueryRow(ctx, `
+        INSERT INTO users (username, email, password_hash)
+        VALUES ($1, $2, $3)
+        RETURNING id, username, email`,
+		username, email, passwordHash,
+	).Scan(&u.ID, &u.Username, &u.Email)
+	if err != nil {
+		return nil, translatePgError(err, "creating user")
+	}
+	return &u, nil
+}
+
 func (r *UserRepository) FindUserByOAuth(ctx context.Context, provider, providerUID string) (*user.User, error) {
 	var u user.User
 	err := r.db.QueryRow(ctx, `

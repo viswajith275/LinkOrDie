@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"link_or_die/internals/apperror"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,4 +31,9 @@ func HTTPrespondError(c *gin.Context, err error) bool {
 		return true
 	}
 	return false
+}
+
+func internalError(c *gin.Context, err error) {
+	log.Printf("internal error: %v", err)
+	c.String(http.StatusInternalServerError, "Something went wrong")
 }
