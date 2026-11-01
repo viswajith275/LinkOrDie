@@ -1,0 +1,15 @@
+package components
+
+import "link_or_die/internals/domains/dashboard"
+
+
+
+templ Dashboard(dashboard dashboard.DashboardView) {
+    <html>
+        <body>
+            <h1>Dashboard</h1>
+            <h4>Hello  { dashboard.UserName }</h4>
+            <p>Email { dashboard.Email }</p>
+           </body>
+    </html>
+}

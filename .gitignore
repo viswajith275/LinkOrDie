@@ -1,3 +1,4 @@
 *.envseal*.lock
 /tmp
 .env
+.DS_Store

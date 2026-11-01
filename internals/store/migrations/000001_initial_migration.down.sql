@@ -1,10 +1,5 @@
--- For scs
-CREATE TABLE sessions (
-    token TEXT PRIMARY KEY,
-    data BYTEA NOT NULL,
-    expiry TIMESTAMPTZ NOT NULL
-);
-
-
-
-CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+DROP TRIGGER IF EXISTS update_users_modtime ON users;
+DROP FUNCTION IF EXISTS update_modified_column();
+DROP TABLE IF EXISTS user_oauth;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS sessions;

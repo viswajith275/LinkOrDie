@@ -25,9 +25,11 @@ fi
 command="${1:-}"
 arg="${2:-}"
 
+MIGRATIONS_DIR="internals/store/migrations"
+
 case "$command" in
     up)
-        migrate -path migrations -database "$DATABASE_URL" up
+        migrate -path "$MIGRATIONS_DIR" -database "$DATABASE_URL" up
         ;;
 
     down)
@@ -36,7 +38,7 @@ case "$command" in
         read -rp "Roll back $count migration(s)? [y/N] " confirm
 
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            migrate -path migrations -database "$DATABASE_URL" down "$count"
+            migrate -path "$MIGRATIONS_DIR" -database "$DATABASE_URL" down "$count"
         else
             echo "Rollback cancelled."
         fi
@@ -49,7 +51,7 @@ case "$command" in
             exit 1
         fi
 
-        migrate create -ext sql -dir migrations -seq "$arg"
+        migrate create -ext sql -dir "$MIGRATIONS_DIR" -seq "$arg"
         ;;
 
     force)
@@ -59,7 +61,7 @@ case "$command" in
             exit 1
         fi
 
-        migrate -path migrations -database "$DATABASE_URL" force "$arg"
+        migrate -path "$MIGRATIONS_DIR" -database "$DATABASE_URL" force "$arg"
         ;;
 
     *)

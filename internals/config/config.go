@@ -12,15 +12,12 @@ type Config struct {
 	GoogleRedirectURL  string
 }
 
-func Load() *Config {
+func LoadConfig() *Config {
 	//setting up config
 
 	config := Config{
-		DatabaseURL:        os.Getenv("DATABASE_URL"),
-		Port:               os.Getenv("PORT"),
-		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+		DatabaseURL: os.Getenv("DATABASE_URL"),
+		Port:        os.Getenv("PORT"),
 	}
 
 	return &config
