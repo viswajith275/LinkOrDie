@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"link_or_die/internals/domains/user"
+	"link_or_die/internal/domains/user"
 	"strings"
 
 	"github.com/google/uuid"

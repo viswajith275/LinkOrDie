@@ -3,7 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
-	"link_or_die/internals/apperror"
+	"link_or_die/internal/apperror"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

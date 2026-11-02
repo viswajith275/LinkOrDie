@@ -7,7 +7,7 @@ CREATE TABLE sessions (
 
 CREATE INDEX sessions_expiry_idx ON sessions (expiry);
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE,
@@ -18,7 +18,7 @@ CREATE TABLE users (
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user_oauth (
+CREATE TABLE IF NOT EXISTS user_oauth (
     user_id      UUID  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider     TEXT NOT NULL,
     provider_uid TEXT NOT NULL,

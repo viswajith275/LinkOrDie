@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"link_or_die/internals/domains/user"
-	"link_or_die/internals/store"
+	"link_or_die/internal/domains/user"
+	"link_or_die/internal/store"
 
 	"github.com/google/uuid"
 )

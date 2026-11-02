@@ -3,7 +3,7 @@ package oauth
 import (
 	"context"
 	"fmt"
-	"link_or_die/internals/domains/auth"
+	"link_or_die/internal/domains/auth"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -69,6 +69,7 @@ func (g *GoogleProvider) ExchangeAndVerify(
 		EmailVerified bool   `json:"email_verified"`
 		Name          string `json:"name"`
 	}
+
 	if err := idToken.Claims(&claims); err != nil {
 		return nil, fmt.Errorf("id_token claims: %w", err)
 	}

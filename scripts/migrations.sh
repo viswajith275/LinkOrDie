@@ -25,7 +25,7 @@ fi
 command="${1:-}"
 arg="${2:-}"
 
-MIGRATIONS_DIR="internals/store/migrations"
+MIGRATIONS_DIR="internal/store/migrations"
 
 case "$command" in
     up)

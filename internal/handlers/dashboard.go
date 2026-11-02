@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"link_or_die/internals/components"
-	"link_or_die/internals/config"
-	"link_or_die/internals/domains/dashboard"
-	"link_or_die/internals/services"
+	"link_or_die/internal/components"
+	"link_or_die/internal/config"
+	"link_or_die/internal/domains/dashboard"
+	"link_or_die/internal/services"
 	"net/http"
 
 	"github.com/39george/scs_gin_adapter"

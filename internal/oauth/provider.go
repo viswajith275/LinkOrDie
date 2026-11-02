@@ -2,7 +2,7 @@ package oauth
 
 import (
 	"context"
-	"link_or_die/internals/domains/auth"
+	"link_or_die/internal/domains/auth"
 )
 
 type Provider interface {

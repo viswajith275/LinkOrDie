@@ -1,12 +1,12 @@
 package main
 
 import (
-	"link_or_die/internals/config"
-	"link_or_die/internals/handlers"
-	"link_or_die/internals/middleware"
-	"link_or_die/internals/oauth"
-	"link_or_die/internals/services"
-	"link_or_die/internals/store"
+	"link_or_die/internal/config"
+	"link_or_die/internal/handlers"
+	"link_or_die/internal/middleware"
+	"link_or_die/internal/oauth"
+	"link_or_die/internal/services"
+	"link_or_die/internal/store"
 	"time"
 
 	"github.com/39george/scs_gin_adapter"

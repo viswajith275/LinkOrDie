@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"errors"
-	"link_or_die/internals/apperror"
+	"link_or_die/internal/apperror"
 	"log"
 	"net/http"
 
