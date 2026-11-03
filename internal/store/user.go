@@ -24,18 +24,6 @@ func CreateUserRepo(db *pgxpool.Pool) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, userID uuid.UUID) (*user.User, error) {
-	var u user.User
-	err := r.db.QueryRow(ctx, `
-		SELECT id, username, email
-		FROM users WHERE id = $1
-		`, userID).Scan(&u.ID, &u.Username, &u.Email)
-	if err != nil {
-		return nil, translatePgError(err, "finding user by userid")
-	}
-	return &u, nil
-}
-
 func (r *UserRepository) GetUserByUserName(ctx context.Context, userName string) (*user.User, string, error) {
 	var u user.User
 	var hash string
@@ -75,6 +63,18 @@ func (r *UserRepository) FindUserByOAuth(ctx context.Context, provider, provider
 
 	if err != nil {
 		return nil, translatePgError(err, "finding user by oauth")
+	}
+	return &u, nil
+}
+
+func (r *UserRepository) FindUserByID(ctx context.Context, userID uuid.UUID) (*user.User, error) {
+	var u user.User
+	err := r.db.QueryRow(ctx, `
+		SELECT id, username, email
+		FROM users WHERE id = $1
+		`, userID).Scan(&u.ID, &u.Username, &u.Email)
+	if err != nil {
+		return nil, translatePgError(err, "finding user by userid")
 	}
 	return &u, nil
 }
@@ -119,7 +119,7 @@ func (r *UserRepository) LinkOAuthAndCreateUser(
 
 	if err == nil {
 		_ = tx.Commit(ctx)
-		return r.GetUserByID(ctx, existingID)
+		return r.FindUserByID(ctx, existingID)
 	}
 
 	// Check if a user with this email already exists (Account Linking)
@@ -145,7 +145,7 @@ func (r *UserRepository) LinkOAuthAndCreateUser(
 		if err := tx.Commit(ctx); err != nil {
 			return nil, err
 		}
-		return r.GetUserByID(ctx, existingEmailUserID)
+		return r.FindUserByID(ctx, existingEmailUserID)
 	}
 
 	// User does not exist, create new user

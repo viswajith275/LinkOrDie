@@ -6,6 +6,7 @@ var ErrNotFound = errors.New("Not Found")
 var ErrConflict = errors.New("Conflict")
 var ErrUnAuthorized = errors.New("UnAuthorized")
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrInvalidURL = errors.New("Invalid url")
 
 type ValidationError struct {
 	Field   string

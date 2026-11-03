@@ -30,6 +30,10 @@ func HTTPrespondError(c *gin.Context, err error) bool {
 		c.String(http.StatusUnauthorized, "Unauthorized")
 		return true
 	}
+	if errors.Is(err, apperror.ErrInvalidURL) {
+		c.String(http.StatusUnprocessableEntity, "Invalid URL")
+		return true
+	}
 	return false
 }
 

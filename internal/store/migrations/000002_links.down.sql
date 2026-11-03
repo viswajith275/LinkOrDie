@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS transitions;
+DROP TABLE IF EXISTS checks;
+DROP TABLE IF EXISTS links;
+DROP TABLE IF EXISTS collections;
+DROP TYPE IF EXISTS check_outcome;
+DROP TYPE IF EXISTS link_state;

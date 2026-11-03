@@ -18,8 +18,13 @@ func translatePgError(err error, context string) error {
 	}
 
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return fmt.Errorf("%s: %w", context, apperror.ErrConflict)
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505": // unique violation
+			return fmt.Errorf("%s: %w", context, apperror.ErrConflict)
+		case "23503": // foreign key violation
+			return fmt.Errorf("%s: %w", context, apperror.ErrNotFound)
+		}
 	}
 
 	return fmt.Errorf("%s: %v", context, err)

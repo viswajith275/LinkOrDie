@@ -19,5 +19,5 @@ func CreateUserService(userRepo *store.UserRepository) *UserService {
 }
 
 func (s *UserService) GetUserById(c context.Context, userID uuid.UUID) (*user.User, error) {
-	return s.r.GetUserByID(c, userID)
+	return s.r.FindUserByID(c, userID)
 }
