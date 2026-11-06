@@ -3,8 +3,12 @@ CREATE TABLE collections (
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id, name)
 );
+
+CREATE TRIGGER update_collections_modtime BEFORE UPDATE ON collections
+  FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
 CREATE TYPE link_state AS ENUM ('pending','alive','flaky','dead');
 CREATE TYPE check_outcome AS ENUM (
