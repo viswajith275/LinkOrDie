@@ -66,6 +66,30 @@ func (r *CollectionRepository) FindCollectionByID(c context.Context, userID uuid
 	return &collection, nil
 }
 
+func (r *CollectionRepository) FindAllCollectionOfUser(c context.Context, userID uuid.UUID) ([]collections.Collection, error) {
+	var out []collections.Collection
+
+	rows, err := r.db.Query(c, `
+		SELECT id, user_id, name, created_at
+		FROM collections
+		WHERE user_id = $1
+		`, userID)
+
+	if err != nil {
+		return nil, translatePgError(err, "listing links")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var c collections.Collection
+		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 func (r *CollectionRepository) ExistsForUser(ctx context.Context, userID, id uuid.UUID) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(ctx,

@@ -45,7 +45,7 @@ func main() {
 	AuthService := services.CreateAuthService(UserRepo)
 	AuthHandler := handlers.CreateAuthHandler(cfg, adapter, googleProvider, AuthService)
 	UserService := services.CreateUserService(UserRepo)
-	DashBoardHandler := handlers.CreateDashboardHandler(cfg, adapter, UserService)
+	DashBoardHandler := handlers.CreateDashboardHandler( UserService)
 
 	r := gin.Default()
 	r.Use(adapter.LoadAndSave)
