@@ -40,7 +40,7 @@ func (a *AuthHandler) HealthHandler(c *gin.Context) {
 }
 
 func (a *AuthHandler) Register(c *gin.Context) {
-	authPage.RegisterForm(user.RegisterView{}).Render(c.Request.Context(), c.Writer)
+	authPage.RegisterPage(user.RegisterView{}).Render(c.Request.Context(), c.Writer)
 }
 
 func (a *AuthHandler) Login(c *gin.Context) {

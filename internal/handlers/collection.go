@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	collectionPage "link_or_die/internal/components/collections"
 	"link_or_die/internal/domains/collections"
 	"link_or_die/internal/services"
 	"net/http"
@@ -38,7 +39,7 @@ func (h *CollectionHandler) Create (c *gin.Context) {
 		return
 	}
 
-	_, err := h.svc.CreateCollection(c, uid, req)
+	collection, err := h.svc.CreateCollection(c, uid, req)
 
 	if err != nil {
 		if !HTTPrespondError(c, err) {
@@ -47,10 +48,15 @@ func (h *CollectionHandler) Create (c *gin.Context) {
 		return
 	}
 
-	// return the collection templ component using collection
-
+	collectionPage.Card(collections.Summary{
+		Collection: *collection,
+		Links: 0,
+		Dead: 0,
+	}).Render(c.Request.Context(), c.Writer)
 }
 
 func (h *CollectionHandler) Collection (c *gin.Context) {
-	// render collection page
+	collectionPage.Page(collectionPage.PageProps{
+
+	})
 }

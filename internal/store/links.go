@@ -4,6 +4,7 @@ import (
 	"context"
 	"link_or_die/internal/apperror"
 	"link_or_die/internal/domains/links"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -72,6 +73,54 @@ func (r *LinkRepository) Delete(ctx context.Context, userID, id uuid.UUID) error
 	}
 	if tag.RowsAffected() == 0 {
 		return apperror.ErrNotFound
+	}
+	return nil
+}
+
+// ClaimDue atomically leases a batch of due links
+func (r *LinkRepository) ClaimDue(ctx context.Context, limit int, lease time.Duration) ([]links.DueLink, error) {
+
+	rows, err := r.db.Query(ctx, `
+		WITH due AS (
+			SELECT id
+			FROM links
+			WHERE next_check_at <= now()
+			ORDER BY next_check_at
+			LIMIT $1
+			FOR UPDATE SKIP LOCKED
+		)
+		UPDATE links l
+		SET next_check_at = now() + make_interval(secs => $2)
+		FROM due
+		WHERE l.id = due.id
+		RETURNING l.id, l.normalized_url, l.host, l.next_check_at
+	`, limit, lease.Seconds())
+	if err != nil {
+		return nil, translatePgError(err, "claiming due links")
+	}
+	defer rows.Close()
+
+	var out []links.DueLink
+	for rows.Next() {
+		var link links.DueLink
+		if err := rows.Scan(&link.ID, &link.URL, &link.Host, &link.LeaseUntil); err != nil {
+			return nil, err
+		}
+		out = append(out, link)
+	}
+
+	return out, rows.Err()
+}
+
+// Requeue moves a link forward only if this worker still owns the claim
+func (r *LinkRepository) Requeue(ctx context.Context, id uuid.UUID, leaseUntil, at time.Time) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE links
+		SET next_check_at = $3
+		WHERE id = $1 AND next_check_at = $2
+	`, id, leaseUntil, at)
+	if err != nil {
+		return translatePgError(err, "requeuing link")
 	}
 	return nil
 }
