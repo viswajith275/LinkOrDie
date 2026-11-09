@@ -1,0 +1,55 @@
+package checks
+
+import (
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/links"
+)
+
+// Panel is both the detail-page section and the polling fragment for /links/{id}/checks.
+templ Panel(linkID string, checks []domain.Check) {
+	<div
+		id="checks-panel"
+		class="card"
+		hx-get={ "/links/" + linkID + "/checks" }
+		hx-trigger="every 30s"
+		hx-swap="outerHTML"
+	>
+		<div class="page-head">
+			<div>
+				<h2>Checks</h2>
+				<p class="muted">Newest first. Refreshes every 30 seconds.</p>
+			</div>
+			<button type="button" class="secondary" hx-get={ "/links/" + linkID + "/checks" } hx-target="#checks-panel" hx-swap="outerHTML">Refresh</button>
+		</div>
+		if len(checks) == 0 {
+			@ui.EmptyState("No checks yet", "The first probe will appear here once the checker runs.", nil)
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Checked</th>
+						<th>Outcome</th>
+						<th>Status</th>
+						<th>Method</th>
+						<th>Elapsed</th>
+						<th>Final URL</th>
+						<th>Error</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, check := range checks {
+						<tr>
+							<td>{ ui.FormatTimeValue(check.CheckedAt) }</td>
+							<td>@ui.OutcomeBadge(check.Outcome)</td>
+							<td>{ ui.DerefInt(check.StatusCode) }</td>
+							<td>{ check.Method }</td>
+							<td>{ check.ElapsedMS } ms</td>
+							<td class="muted">{ ui.DerefString(check.FinalURL) }</td>
+							<td class="muted">{ ui.DerefString(check.Error) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</div>
+}

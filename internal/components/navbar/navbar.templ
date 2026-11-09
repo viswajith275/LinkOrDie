@@ -1,0 +1,19 @@
+package navbar
+
+templ Navbar(p Props) {
+	<header class="navbar">
+		<a class="brand" href="/dashboard">LinkOrDie</a>
+		<nav class="nav-links" aria-label="Main">
+			<a class={ navClass(p.Active, "dashboard") } href="/dashboard">Dashboard</a>
+			<a class={ navClass(p.Active, "collections") } href="/collections">Collections</a>
+			<a class={ navClass(p.Active, "links") } href="/links">Links</a>
+			<a class={ navClass(p.Active, "cemetery") } href="/cemetery">Cemetery</a>
+		</nav>
+		<div class="nav-user">
+			<span>{ p.UserName }</span>
+			<form method="post" action="/logout" hx-boost="false">
+				<button type="submit" class="link-button">Logout</button>
+			</form>
+		</div>
+	</header>
+}

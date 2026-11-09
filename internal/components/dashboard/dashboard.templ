@@ -1,0 +1,82 @@
+package dashboard
+
+import (
+	"link_or_die/internal/components/collections"
+	"link_or_die/internal/components/layout"
+	"link_or_die/internal/components/links"
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/dashboard"
+)
+
+templ Page(view domain.DashboardView) {
+	@layout.App(layout.AppProps{
+		Title:    "Dashboard",
+		UserName: view.UserName,
+		Active:   "dashboard",
+		Content:  pageContent(view),
+	})
+}
+
+templ pageContent(view domain.DashboardView) {
+	<div class="page-head">
+		<div>
+			<h1>Dashboard</h1>
+			<p class="muted">Hello { view.UserName } ({ view.Email }). Here is the state of your links.</p>
+		</div>
+		<div class="row">
+			<button type="button" hx-get="/links/new" hx-target="#modal-host" hx-swap="innerHTML">Add link</button>
+			<a class="button secondary" href="/links">All links</a>
+		</div>
+	</div>
+
+	@Stats(view.Stats)
+
+	<section class="stack">
+		<div class="page-head">
+			<h2>Collections</h2>
+			@collections.NewCollectionButton()
+		</div>
+		@collections.List(view.Collections)
+	</section>
+
+	<section class="stack">
+		<div class="page-head">
+			<h2>Recent links</h2>
+			<a href="/links">View all</a>
+		</div>
+		@links.Table(links.TableProps{Links: view.RecentLinks, ShowCollection: true})
+	</section>
+}
+
+templ Stats(stats domain.Stats) {
+	<div class="grid">
+		<div class="card">
+			<div class="stat">{ stats.Total }</div>
+			<div class="muted">Links tracked</div>
+		</div>
+		<div class="card">
+			<div class="stat">{ stats.Alive }</div>
+			<div class="muted">Alive</div>
+		</div>
+		<div class="card">
+			<div class="stat">{ stats.Flaky }</div>
+			<div class="muted">Flaky</div>
+		</div>
+		<div class="card">
+			<div class="stat">{ stats.Dead }</div>
+			<div class="muted">Dead</div>
+		</div>
+		<div class="card">
+			<div class="stat">{ stats.Pending }</div>
+			<div class="muted">Pending</div>
+		</div>
+		<div class="card">
+			<div class="stat">{ stats.Collections }</div>
+			<div class="muted">Collections</div>
+		</div>
+	</div>
+}
+
+templ Empty() {
+	@ui.EmptyState("Nothing here yet", "Add your first link and the dashboard will come alive.", nil)
+}

@@ -1,0 +1,76 @@
+package cemetery
+
+import (
+	"link_or_die/internal/components/layout"
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/links"
+)
+
+type PageProps struct {
+	UserName   string
+	TotalLinks int
+	Dead       []domain.View
+}
+
+templ Page(p PageProps) {
+	@layout.App(layout.AppProps{
+		Title:    "Cemetery",
+		UserName: p.UserName,
+		Active:   "cemetery",
+		Content:  pageContent(p),
+	})
+}
+
+templ pageContent(p PageProps) {
+	<div class="page-head">
+		<div>
+			<h1>Cemetery</h1>
+			<p class="muted">Links that stopped responding. { len(p.Dead) } of { p.TotalLinks } are buried here.</p>
+		</div>
+	</div>
+	if len(p.Dead) == 0 {
+		@ui.EmptyState("The cemetery is empty", "Every link you track is still alive. Enjoy it while it lasts.", nil)
+	} else {
+		<div class="grid">
+			for _, item := range p.Dead {
+				@Tombstone(item)
+			}
+		</div>
+	}
+}
+
+templ Tombstone(item domain.View) {
+	<article id={ "grave-" + item.Link.ID.String() } class="card tombstone">
+		<h2>{ item.Link.TitleOrHost() }</h2>
+		<p class="muted">{ item.Link.Host }</p>
+		<p>
+			Cause of death:
+			if item.Link.CauseOfDeath != nil {
+				@ui.OutcomeBadge(*item.Link.CauseOfDeath)
+			} else {
+				<span class="muted">Unknown</span>
+			}
+		</p>
+		<dl>
+			<dt>Died</dt>
+			<dd>{ ui.FormatTime(item.Link.DiedAt) }</dd>
+			<dt>Last check</dt>
+			<dd>{ ui.FormatTime(item.Link.LastCheckedAt) }</dd>
+			<dt>Failures</dt>
+			<dd>{ item.Link.TotalFailures }</dd>
+			<dt>Resurrected</dt>
+			<dd>{ item.Link.ResurrectedCount } times</dd>
+		</dl>
+		<div class="row">
+			<a href={ "/links/" + item.Link.ID.String() }>View autopsy</a>
+			<button
+				type="button"
+				class="link-button"
+				hx-delete={ "/links/" + item.Link.ID.String() }
+				hx-target={ "#grave-" + item.Link.ID.String() }
+				hx-swap="delete"
+				hx-confirm="Remove this link and all of its history permanently?"
+			>Remove record</button>
+		</div>
+	</article>
+}

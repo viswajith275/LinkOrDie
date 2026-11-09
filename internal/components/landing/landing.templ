@@ -1,0 +1,37 @@
+package landing
+
+import "link_or_die/internal/components/layout"
+
+templ Page() {
+	@layout.Bare(layout.BareProps{Title: "Keep every link honest", Content: content()})
+}
+
+templ content() {
+	<section class="hero">
+		<h1>LinkOrDie</h1>
+		<p class="muted">Track every link. Watch it fail. Bring it back. Or bury it properly.</p>
+		<div class="row" style="justify-content: center;">
+			<a class="button" href="/register">Create an account</a>
+			<a class="button secondary" href="/login">Login</a>
+		</div>
+	</section>
+
+	<section class="feature-list">
+		<article class="card">
+			<h2>Collections</h2>
+			<p>Group links by project or client, so a broken dependency has an obvious home.</p>
+		</article>
+		<article class="card">
+			<h2>Checks</h2>
+			<p>Every probe is recorded with its status, timing, and the exact error it returned.</p>
+		</article>
+		<article class="card">
+			<h2>Transitions</h2>
+			<p>See when a link went from alive to flaky to dead, and what caused it.</p>
+		</article>
+		<article class="card">
+			<h2>Cemetery</h2>
+			<p>Dead links are not deleted. They are buried with a cause of death and a full autopsy.</p>
+		</article>
+	</section>
+}

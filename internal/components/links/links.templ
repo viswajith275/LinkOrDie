@@ -1,0 +1,226 @@
+package links
+
+import (
+	"link_or_die/internal/components/checks"
+	"link_or_die/internal/components/layout"
+	"link_or_die/internal/components/transitions"
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/links"
+)
+
+templ Page(p PageProps) {
+	@layout.App(layout.AppProps{
+		Title:    "Links",
+		UserName: p.UserName,
+		Active:   "links",
+		Content:  pageContent(p),
+	})
+}
+
+templ pageContent(p PageProps) {
+	<div class="page-head">
+		<div>
+			<h1>Links</h1>
+			<p class="muted">Every link you have asked us to keep alive.</p>
+		</div>
+		<button type="button" hx-get="/links/new" hx-target="#modal-host" hx-swap="innerHTML">Add link</button>
+	</div>
+	@FilterNav(p.State)
+	@Table(TableProps{Links: p.Links, ShowCollection: true})
+}
+
+templ FilterNav(active string) {
+	<nav class="tabs" aria-label="Filter links">
+		<a class={ filterClass(active, "") } href="/links" hx-get="/links/table" hx-target="#links-table" hx-swap="outerHTML" hx-push-url="/links">All</a>
+		<a class={ filterClass(active, "alive") } href="/links?state=alive" hx-get="/links/table?state=alive" hx-target="#links-table" hx-swap="outerHTML" hx-push-url="/links?state=alive">Alive</a>
+		<a class={ filterClass(active, "flaky") } href="/links?state=flaky" hx-get="/links/table?state=flaky" hx-target="#links-table" hx-swap="outerHTML" hx-push-url="/links?state=flaky">Flaky</a>
+		<a class={ filterClass(active, "pending") } href="/links?state=pending" hx-get="/links/table?state=pending" hx-target="#links-table" hx-swap="outerHTML" hx-push-url="/links?state=pending">Pending</a>
+		<a class={ filterClass(active, "dead") } href="/links?state=dead" hx-get="/links/table?state=dead" hx-target="#links-table" hx-swap="outerHTML" hx-push-url="/links?state=dead">Dead</a>
+	</nav>
+}
+
+// Table is also the htmx fragment returned by /links/table.
+templ Table(p TableProps) {
+	<div id="links-table">
+		if len(p.Links) == 0 {
+			@ui.EmptyState("No links here", "Add a link or change the filter.", nil)
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Link</th>
+						if p.ShowCollection {
+							<th>Collection</th>
+						}
+						<th>State</th>
+						<th>Last check</th>
+						<th>Failures</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, item := range p.Links {
+						@Row(item, p.ShowCollection)
+					}
+				</tbody>
+			</table>
+		}
+	</div>
+}
+
+templ Row(item domain.View, showCollection bool) {
+	<tr id={ "link-" + item.Link.ID.String() }>
+		<td>
+			<a href={ "/links/" + item.Link.ID.String() }>
+				{ item.Link.TitleOrHost() }
+			</a>
+			<div class="muted">{ item.Link.Host }</div>
+		</td>
+		if showCollection {
+			<td>
+				if item.CollectionName != "" {
+					{ item.CollectionName }
+				} else {
+					<span class="muted">Unfiled</span>
+				}
+			</td>
+		}
+		<td>@ui.StateBadge(item.Link.State)</td>
+		<td>{ ui.FormatTime(item.Link.LastCheckedAt) }</td>
+		<td>{ item.Link.ConsecutiveFailures } / { item.Link.TotalFailures }</td>
+		<td>
+			<div class="row">
+				<a href={ "/links/" + item.Link.ID.String() }>Details</a>
+				<button
+					type="button"
+					class="link-button"
+					hx-delete={ "/links/" + item.Link.ID.String() }
+					hx-target={ "#link-" + item.Link.ID.String() }
+					hx-swap="delete"
+					hx-confirm="Send this link to the cemetery?"
+				>Delete</button>
+			</div>
+		</td>
+	</tr>
+}
+
+templ Form(p FormProps) {
+	<form id="link-form" class="form" hx-post="/links" hx-target="#links-table" hx-swap="outerHTML">
+		@ui.ErrorBanner(p.Error)
+		<label>
+			URL
+			<input name="url" type="url" value={ p.URL } placeholder="https://example.com" required/>
+		</label>
+		<label>
+			Title
+			<input name="title" value={ p.Title } placeholder="Optional, defaults to the host"/>
+		</label>
+		<label>
+			Collection
+			<select name="collection_id">
+				<option value="">Unfiled</option>
+				for _, c := range p.Collections {
+					<option
+						value={ c.ID.String() }
+						selected?={ p.SelectedCollectionID != nil && *p.SelectedCollectionID == c.ID }
+					>{ c.Name }</option>
+				}
+			</select>
+		</label>
+		<div class="row">
+			<button type="submit">Add link</button>
+			<button type="button" class="secondary" hx-on:click="this.closest('.modal-backdrop').remove()">Cancel</button>
+		</div>
+	</form>
+}
+
+templ CreateModal(p FormProps) {
+	@ui.Modal("Add a link", Form(p))
+}
+
+templ CreatedResponse(p TableProps, message string) {
+	@Table(p)
+	@ui.Toast(message, "success")
+	@ui.CloseModalOOB()
+}
+
+templ DeletedResponse(message string) {
+	@ui.Toast(message, "danger")
+}
+
+templ DetailPage(p DetailProps) {
+	@layout.App(layout.AppProps{
+		Title:    p.Detail.Link.TitleOrHost(),
+		UserName: p.UserName,
+		Active:   "links",
+		Content:  detailContent(p.Detail),
+	})
+}
+
+templ detailContent(detail domain.Detail) {
+	<p class="muted"><a href="/links">← All links</a></p>
+	<div class="page-head">
+		<div>
+			<h1>{ detail.Link.TitleOrHost() }</h1>
+			<p class="muted">{ detail.Link.URL }</p>
+		</div>
+		<div class="row">
+			@ui.StateBadge(detail.Link.State)
+			<a class="button secondary" href={ detail.Link.URL } target="_blank" rel="noopener noreferrer">Open link</a>
+		</div>
+	</div>
+
+	<section class="card">
+		<h2>Details</h2>
+		<dl>
+			<dt>Host</dt>
+			<dd>{ detail.Link.Host }</dd>
+			<dt>Collection</dt>
+			<dd>{ detail.CollectionName }</dd>
+			<dt>Normalized URL</dt>
+			<dd>{ detail.Link.NormalizedURL }</dd>
+			<dt>Last outcome</dt>
+			<dd>
+				if detail.Link.LastOutcome != nil {
+					@ui.OutcomeBadge(*detail.Link.LastOutcome)
+				} else {
+					<span class="muted">Not checked yet</span>
+				}
+			</dd>
+			<dt>Last status</dt>
+			<dd>{ ui.DerefInt(detail.Link.LastStatusCode) }</dd>
+			<dt>Last error</dt>
+			<dd>{ ui.DerefString(detail.Link.LastError) }</dd>
+			<dt>Cause of death</dt>
+			<dd>
+				if detail.Link.CauseOfDeath != nil {
+					@ui.OutcomeBadge(*detail.Link.CauseOfDeath)
+				} else {
+					<span class="muted">Not dead</span>
+				}
+			</dd>
+			<dt>Failures</dt>
+			<dd>{ detail.Link.ConsecutiveFailures } consecutive / { detail.Link.TotalFailures } total</dd>
+			<dt>Resurrections</dt>
+			<dd>{ detail.Link.ResurrectedCount }</dd>
+			<dt>Last checked</dt>
+			<dd>{ ui.FormatTime(detail.Link.LastCheckedAt) }</dd>
+			<dt>Last alive</dt>
+			<dd>{ ui.FormatTime(detail.Link.LastOKAt) }</dd>
+			<dt>Died at</dt>
+			<dd>{ ui.FormatTime(detail.Link.DiedAt) }</dd>
+			<dt>Next check</dt>
+			<dd>{ ui.FormatTime(detail.Link.NextCheckAt) }</dd>
+			<dt>Created</dt>
+			<dd>{ ui.FormatTimeValue(detail.Link.CreatedAt) }</dd>
+		</dl>
+	</section>
+
+	<section class="stack">
+		@checks.Panel(detail.Link.ID.String(), detail.Checks)
+	</section>
+
+	<section class="stack">
+		@transitions.Timeline(detail.Transitions)
+	</section>
+}

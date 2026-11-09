@@ -1,0 +1,37 @@
+package transitions
+
+import (
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/links"
+)
+
+templ Timeline(transitions []domain.Transition) {
+	<section class="card">
+		<h2>Transitions</h2>
+		<p class="muted">Every time this link changed state, newest first.</p>
+		if len(transitions) == 0 {
+			@ui.EmptyState("No transitions yet", "State changes will appear here as links are checked.", nil)
+		} else {
+			<ol class="timeline">
+				for _, transition := range transitions {
+					<li>
+						<div class="row">
+							@ui.StateBadge(transition.FromState)
+							<span>→</span>
+							@ui.StateBadge(transition.ToState)
+							<span class="muted">{ ui.FormatTimeValue(transition.OccurredAt) }</span>
+						</div>
+						<p class="muted">
+							if transition.Outcome != nil {
+								Outcome: { ui.Humanize(*transition.Outcome) }
+							}
+							if transition.Cause != nil {
+								· Cause: { ui.Humanize(*transition.Cause) }
+							}
+						</p>
+					</li>
+				}
+			</ol>
+		}
+	</section>
+}

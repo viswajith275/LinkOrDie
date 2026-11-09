@@ -1,0 +1,77 @@
+package ui
+
+templ Badge(label, tone string) {
+	<span class={ "badge badge-" + tone }>{ label }</span>
+}
+
+templ StateBadge(state string) {
+	@Badge(Humanize(state), StateTone(state))
+}
+
+templ OutcomeBadge(outcome string) {
+	@Badge(Humanize(outcome), OutcomeTone(outcome))
+}
+
+templ ErrorBanner(message string) {
+	if message != "" {
+		<div class="error-banner" role="alert">
+			<strong>Something needs fixing.</strong>
+			<p>{ message }</p>
+		</div>
+	}
+}
+
+templ FieldError(message string) {
+	if message != "" {
+		<p class="field-error">{ message }</p>
+	}
+}
+
+templ EmptyState(title, hint string, action templ.Component) {
+	<div class="empty-state">
+		<h3>{ title }</h3>
+		<p>{ hint }</p>
+		if action != nil {
+			@action
+		}
+	</div>
+}
+
+templ Modal(title string, content templ.Component) {
+	<div class="modal-backdrop" hx-on:click="if (event.target === this) this.remove()">
+		<div class="modal" role="dialog" aria-modal="true" aria-label={ title }>
+			<header class="modal-head">
+				<h2>{ title }</h2>
+				<button type="button" class="icon-button" aria-label="Close" hx-on:click="this.closest('.modal-backdrop').remove()">×</button>
+			</header>
+			<div class="modal-body">
+				@content
+			</div>
+		</div>
+	</div>
+}
+
+templ ModalHost() {
+	<div id="modal-host"></div>
+}
+
+// CloseModalOOB is added to a successful htmx response to dismiss the open modal.
+templ CloseModalOOB() {
+	<div id="modal-host" hx-swap-oob="innerHTML"></div>
+}
+
+templ ToastHost() {
+	<div id="toasts" class="toasts" aria-live="polite"></div>
+}
+
+// Toast is rendered with hx-swap-oob, so it can be returned alongside any fragment.
+templ Toast(message, tone string) {
+	<div class={ "toast toast-" + tone } role="status" hx-swap-oob="beforeend:#toasts">
+		<span>{ message }</span>
+		<button type="button" class="icon-button" aria-label="Dismiss" hx-on:click="this.parentElement.remove()">×</button>
+	</div>
+}
+
+templ Loading() {
+	<span id="global-indicator" class="htmx-indicator" aria-live="polite">Loading…</span>
+}

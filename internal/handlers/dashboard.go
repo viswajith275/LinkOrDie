@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"link_or_die/internal/components"
+	dashboardPage "link_or_die/internal/components/dashboard"
 	"link_or_die/internal/domains/dashboard"
 	"link_or_die/internal/services"
 	"net/http"
@@ -38,7 +38,7 @@ func (d *DashboardHandler) Dashboard(c *gin.Context) {
 		return
 	}
 
-	components.Dashboard(dashboard.DashboardView{
+	dashboardPage.Page(dashboard.DashboardView{
 		UserName: user.Username,
 		Email:    user.Email,
 	}).Render(c.Request.Context(), c.Writer)

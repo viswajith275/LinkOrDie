@@ -1,0 +1,74 @@
+package errors
+
+import "link_or_die/internal/components/layout"
+
+type PageProps struct {
+	Code    int
+	Title   string
+	Message string
+	Action  string
+	Href    string
+}
+
+templ Page(p PageProps) {
+	@layout.Bare(layout.BareProps{Title: p.Title, Content: pageContent(p)})
+}
+
+templ pageContent(p PageProps) {
+	<section class="hero">
+		<p class="muted">{ p.Code }</p>
+		<h1>{ p.Title }</h1>
+		<p>{ p.Message }</p>
+		if p.Action != "" && p.Href != "" {
+			<a class="button" href={ p.Href }>{ p.Action }</a>
+		}
+	</section>
+}
+
+templ NotFoundPage() {
+	@Page(PageProps{
+		Code:    404,
+		Title:   "Not found",
+		Message: "That page, collection, or link does not exist.",
+		Action:  "Back to dashboard",
+		Href:    "/dashboard",
+	})
+}
+
+templ UnauthorizedPage() {
+	@Page(PageProps{
+		Code:    401,
+		Title:   "Logged out",
+		Message: "You need to log in before you can see this.",
+		Action:  "Login",
+		Href:    "/login",
+	})
+}
+
+templ ServerErrorPage() {
+	@Page(PageProps{
+		Code:    500,
+		Title:   "Something broke",
+		Message: "The server could not finish that request. It has been logged.",
+		Action:  "Back to dashboard",
+		Href:    "/dashboard",
+	})
+}
+
+templ ConflictPage(message string) {
+	@Page(PageProps{
+		Code:    409,
+		Title:   "Conflict",
+		Message: message,
+		Action:  "Back",
+		Href:    "/dashboard",
+	})
+}
+
+// Panel is the compact error fragment for htmx responses.
+templ Panel(code int, title, message string) {
+	<div class="error-banner" role="alert">
+		<strong>{ code } · { title }</strong>
+		<p>{ message }</p>
+	</div>
+}

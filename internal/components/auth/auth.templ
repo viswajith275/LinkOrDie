@@ -1,0 +1,60 @@
+package auth
+
+import (
+	"link_or_die/internal/components/layout"
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/auth"
+	"link_or_die/internal/domains/user"
+)
+
+templ LoginPage(view domain.LoginView) {
+	@layout.Auth(layout.AuthProps{Title: "Login", Content: LoginForm(view)})
+}
+
+templ LoginForm(view domain.LoginView) {
+	<h1>Login</h1>
+	<p class="muted">Keep your links alive, or bury them properly.</p>
+	@ui.ErrorBanner(view.Error)
+	<form class="form" method="post" action="/login">
+		<label>
+			Username
+			<input name="username" value={ view.Username } autocomplete="username" required/>
+		</label>
+		<label>
+			Password
+			<input name="password" type="password" autocomplete="current-password" required/>
+		</label>
+		<button type="submit">Login</button>
+	</form>
+	<hr/>
+	<a href="/auth/google">Login with Google</a>
+	<p class="muted">No account yet? <a href="/register">Register</a></p>
+}
+
+templ RegisterPage(view user.RegisterView) {
+	@layout.Auth(layout.AuthProps{Title: "Register", Content: RegisterForm(view)})
+}
+
+templ RegisterForm(view user.RegisterView) {
+	<h1>Register</h1>
+	<p class="muted">Add links once. We will keep checking them.</p>
+	@ui.ErrorBanner(view.Error)
+	<form class="form" method="post" action="/register">
+		<label>
+			Username
+			<input name="username" value={ view.Username } autocomplete="username" required/>
+		</label>
+		<label>
+			Email
+			<input name="email" type="email" value={ view.Email } autocomplete="email" required/>
+		</label>
+		<label>
+			Password
+			<input name="password" type="password" autocomplete="new-password" required/>
+		</label>
+		<button type="submit">Register</button>
+	</form>
+	<hr/>
+	<a href="/auth/google">Register with Google</a>
+	<p class="muted">Already have an account? <a href="/login">Login</a></p>
+}

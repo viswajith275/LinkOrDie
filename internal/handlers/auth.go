@@ -5,7 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"link_or_die/internal/apperror"
-	"link_or_die/internal/components"
+	authPage "link_or_die/internal/components/auth"
+	"link_or_die/internal/components/landing"
 	"link_or_die/internal/config"
 	"link_or_die/internal/domains/auth"
 	"link_or_die/internal/domains/user"
@@ -35,11 +36,11 @@ func CreateAuthHandler(cfg *config.Config, adapter *scs_gin_adapter.GinAdapter, 
 }
 
 func (a *AuthHandler) HealthHandler(c *gin.Context) {
-	components.Landing().Render(c.Request.Context(), c.Writer)
+	landing.Page().Render(c.Request.Context(), c.Writer)
 }
 
 func (a *AuthHandler) Register(c *gin.Context) {
-	components.Register(user.RegisterView{}).Render(c.Request.Context(), c.Writer)
+	authPage.RegisterForm(user.RegisterView{}).Render(c.Request.Context(), c.Writer)
 }
 
 func (a *AuthHandler) Login(c *gin.Context) {
@@ -47,14 +48,14 @@ func (a *AuthHandler) Login(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/dashboard")
 		return
 	}
-	components.Login(auth.LoginView{}).Render(c.Request.Context(), c.Writer)
+	authPage.LoginPage(auth.LoginView{}).Render(c.Request.Context(), c.Writer)
 }
 
 func (a *AuthHandler) LoginWithPassword(c *gin.Context) {
 	var req user.LoginRequest
 
 	if err := c.ShouldBind(&req); err != nil {
-		components.Login(auth.LoginView{
+		authPage.LoginPage(auth.LoginView{
 			Username: req.Username,
 			Error:    "Username and password are required",
 		}).Render(c.Request.Context(), c.Writer)
@@ -64,7 +65,7 @@ func (a *AuthHandler) LoginWithPassword(c *gin.Context) {
 	u, err := a.svc.LoginWithPassword(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, apperror.ErrInvalidCredentials) {
-			components.Login(auth.LoginView{
+			authPage.LoginPage(auth.LoginView{
 				Username: req.Username,
 				Error:    "Invalid username or password",
 			}).Render(c.Request.Context(), c.Writer)
@@ -83,7 +84,7 @@ func (a *AuthHandler) RegisterWithPassword(c *gin.Context) {
 	var req user.RegisterRequest
 
 	if err := c.ShouldBind(&req); err != nil {
-		components.Register(user.RegisterView{
+		authPage.RegisterPage(user.RegisterView{
 			Username: req.Username,
 			Email:    req.Email,
 			Error:    "Input validation error: username 3-32 chars, valid email, password_len ≥ 8 chars",
@@ -95,7 +96,7 @@ func (a *AuthHandler) RegisterWithPassword(c *gin.Context) {
 	if err != nil {
 		var ve *apperror.ValidationError
 		if errors.As(err, &ve) {
-			components.Register(user.RegisterView{
+			authPage.RegisterPage(user.RegisterView{
 				Username: req.Username,
 				Email:    req.Email,
 				Error:    ve.Message,
@@ -159,7 +160,7 @@ func (a *AuthHandler) GoogleCallback(c *gin.Context) {
 
 	// User "Deny" on Google's consent screen
 	if c.Query("error") != "" {
-		components.Login(auth.LoginView{Error: "Google login was cancelled."}).
+		authPage.LoginPage(auth.LoginView{Error: "Google login was cancelled."}).
 			Render(c.Request.Context(), c.Writer)
 		return
 	}
@@ -168,7 +169,7 @@ func (a *AuthHandler) GoogleCallback(c *gin.Context) {
 		c.Request.Context(), c.Query("code"), savedNonce, savedVerifier,
 	)
 	if err != nil {
-		components.Login(auth.LoginView{Error: "Google login failed. Try again."}).
+		authPage.LoginPage(auth.LoginView{Error: "Google login failed. Try again."}).
 			Render(c.Request.Context(), c.Writer)
 		return
 	}
@@ -176,7 +177,7 @@ func (a *AuthHandler) GoogleCallback(c *gin.Context) {
 	u, err := a.svc.LoginWithOAuth(c.Request.Context(), identity)
 	if err != nil {
 		if !HTTPrespondError(c, err) {
-			components.Login(auth.LoginView{Error: "Login failed. Please try again."}).
+			authPage.LoginPage(auth.LoginView{Error: "Login failed. Please try again."}).
 				Render(c.Request.Context(), c.Writer)
 		}
 		return

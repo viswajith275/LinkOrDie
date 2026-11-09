@@ -1,0 +1,111 @@
+package collections
+
+import (
+	"link_or_die/internal/components/layout"
+	linkview "link_or_die/internal/components/links"
+	"link_or_die/internal/components/ui"
+	domain "link_or_die/internal/domains/collections"
+)
+
+templ Page(p PageProps) {
+	@layout.App(layout.AppProps{
+		Title:    "Collections",
+		UserName: p.UserName,
+		Active:   "collections",
+		Content:  pageContent(p),
+	})
+}
+
+templ pageContent(p PageProps) {
+	<div class="page-head">
+		<div>
+			<h1>Collections</h1>
+			<p class="muted">Group links by project, client, or whatever keeps you sane.</p>
+		</div>
+		@NewCollectionButton()
+	</div>
+	@List(p.Collections)
+}
+
+templ NewCollectionButton() {
+	<button type="button" hx-get="/collections/new" hx-target="#modal-host" hx-swap="innerHTML">New collection</button>
+}
+
+// List is also the htmx fragment returned after a collection is created.
+templ List(collections []domain.Summary) {
+	<div id="collections-list">
+		if len(collections) == 0 {
+			@ui.EmptyState("No collections yet", "Collections keep related links together. Make your first one.", NewCollectionButton())
+		} else {
+			<div class="grid">
+				for _, summary := range collections {
+					@Card(summary)
+				}
+			</div>
+		}
+	</div>
+}
+
+templ Card(summary domain.Summary) {
+	<article class="card">
+		<h2><a href={ "/collections/" + summary.Collection.ID.String() }>{ summary.Collection.Name }</a></h2>
+		<div class="row">
+			@ui.Badge(pluralize(summary.Links, "link"), "neutral")
+			if summary.Dead > 0 {
+				@ui.Badge(pluralize(summary.Dead, "dead"), "danger")
+			}
+		</div>
+		<p class="muted">Created { ui.FormatTimeValue(summary.Collection.CreatedAt) }</p>
+	</article>
+}
+
+templ Form(p FormProps) {
+	<form id="collection-form" class="form" hx-post="/collections" hx-target="#collections-list" hx-swap="outerHTML">
+		@ui.ErrorBanner(p.Error)
+		<label>
+			Name
+			<input name="name" value={ p.Name } placeholder="e.g. Production APIs" required/>
+		</label>
+		<div class="row">
+			<button type="submit">Create collection</button>
+			<button type="button" class="secondary" hx-on:click="this.closest('.modal-backdrop').remove()">Cancel</button>
+		</div>
+	</form>
+}
+
+templ CreateModal(p FormProps) {
+	@ui.Modal("New collection", Form(p))
+}
+
+templ CreatedResponse(collections []domain.Summary, message string) {
+	@List(collections)
+	@ui.Toast(message, "success")
+	@ui.CloseModalOOB()
+}
+
+templ DetailPage(p DetailProps) {
+	@layout.App(layout.AppProps{
+		Title:    p.Collection.Name,
+		UserName: p.UserName,
+		Active:   "collections",
+		Content:  detailContent(p),
+	})
+}
+
+templ detailContent(p DetailProps) {
+	<p class="muted"><a href="/collections">← All collections</a></p>
+	<div class="page-head">
+		<div>
+			<h1>{ p.Collection.Name }</h1>
+			<p class="muted">Created { ui.FormatTimeValue(p.Collection.CreatedAt) }</p>
+		</div>
+		<div class="row">
+			<button type="button" hx-get={ "/links/new?collection_id=" + p.Collection.ID.String() } hx-target="#modal-host" hx-swap="innerHTML">Add link</button>
+		</div>
+	</div>
+	if len(p.Links) == 0 {
+		@ui.EmptyState("This collection is empty", "Add a link and it will be filed here.", nil)
+	} else {
+		@linkview.Table(linkview.TableProps{Links: p.Links, ShowCollection: false})
+	}
+}
