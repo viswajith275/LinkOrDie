@@ -4,22 +4,11 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"link_or_die/internal/config"
 	"link_or_die/internal/domains/links"
 )
 
-// replace with config values
-const (
-	FlakyAfter = 2
-	DeadAfter  = 4
-
-	PendingDelay = 5 * time.Minute
-	AliveDelay   = 24 * time.Hour
-	FlakyDelay   = 4 * time.Hour
-	DeadDelay    = 7 * 24 * time.Hour
-	BlockedDelay = 30 * time.Minute
-)
-
-// final decision after checks
+// final decision after check
 type Decision struct {
 	NextState           links.State
 	ConsecutiveFailures int
@@ -30,7 +19,7 @@ type Decision struct {
 	Cause               *links.Outcome
 }
 
-func Decide(current links.State, consecutiveFailures int, outcome links.Outcome) Decision {
+func Decide(current links.State, consecutiveFailures int, outcome links.Outcome, cfg *config.Config) Decision {
 	switch {
 	case outcome.IsSuccess():
 		d := Decision{
@@ -74,14 +63,14 @@ func Decide(current links.State, consecutiveFailures int, outcome links.Outcome)
 		}
 
 		switch {
-		case nextFailures >= DeadAfter:
+		case nextFailures >= cfg.DeadAfter:
 			cause := outcome
 			d.NextState = links.StateDead
 			d.Cause = &cause
 			d.Changed = true
 			d.Died = true
 
-		case nextFailures >= FlakyAfter:
+		case nextFailures >= cfg.FlakyAfter:
 			d.NextState = links.StateFlaky
 			d.Changed = current != links.StateFlaky
 		}
@@ -91,22 +80,22 @@ func Decide(current links.State, consecutiveFailures int, outcome links.Outcome)
 }
 
 // calculating next delay for check
-func NextDelay(state links.State, outcome links.Outcome) time.Duration {
-	base := PendingDelay
+func NextDelay(state links.State, outcome links.Outcome, cfg *config.Config) time.Duration {
+	base := cfg.PendingDelay
 
 	switch state {
 	case links.StateAlive:
-		base = AliveDelay
+		base = cfg.AliveDelay
 	case links.StateFlaky:
-		base = FlakyDelay
+		base = cfg.FlakyDelay
 	case links.StateDead:
-		base = DeadDelay
+		base = cfg.DeadDelay
 	}
 
 	if outcome.IsBlocked() {
-		base = BlockedDelay
+		base = cfg.BlockedDelay
 	}
 
-	jitter := 0.9 + rand.Float64()*0.2
+	jitter := 0.9 + rand.Float64() * 0.2
 	return time.Duration(float64(base) * jitter)
 }

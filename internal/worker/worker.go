@@ -147,7 +147,7 @@ func (w *Worker) process(ctx context.Context, link links.DueLink) {
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	checkedAt := time.Now()
-	decision, err := lifecycle.Apply(ctx, tx, link.ID, result, checkedAt, link.LeaseUntil)
+	decision, err := lifecycle.Apply(ctx, tx, link.ID, result, checkedAt, link.LeaseUntil, w.cfg)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):

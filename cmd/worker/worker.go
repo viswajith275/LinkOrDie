@@ -14,13 +14,6 @@ import (
 	"link_or_die/internal/worker"
 )
 
-func main() {
-	if err := run(); err != nil {
-		slog.Error("worker stopped", "err", err)
-		os.Exit(1)
-	}
-}
-
 func run() error {
 	cfg := config.LoadConfig()
 
@@ -41,4 +34,11 @@ func run() error {
 		return err
 	}
 	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("worker stopped", "err", err)
+		os.Exit(1)
+	}
 }

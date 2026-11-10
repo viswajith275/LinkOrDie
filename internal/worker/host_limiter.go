@@ -29,8 +29,7 @@ func newHostLimiter(every time.Duration) *hostLimiter {
 	}
 }
 
-// Reserve returns how long the caller should wait before checking this host.
-// Zero means the token was taken and the check may run now.
+// Reserve returns how long the caller should wait before checking this host
 func (h *hostLimiter) Reserve(host string) time.Duration {
 	if host == "" {
 		return 0

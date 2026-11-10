@@ -18,6 +18,13 @@ type Config struct {
 	Concurrency  int
 	Lease        time.Duration
 	HostInterval time.Duration
+	FlakyAfter int
+	DeadAfter  int
+	PendingDelay time.Duration
+	AliveDelay   time.Duration
+	FlakyDelay   time.Duration
+	DeadDelay    time.Duration
+	BlockedDelay time.Duration
 }
 
 func LoadConfig() *Config {
@@ -33,6 +40,13 @@ func LoadConfig() *Config {
 		Concurrency:  getEnvInt("CONCURRENCY", 8),
 		Lease:        getEnvDuration("LEASE", 5*time.Minute),
 		HostInterval: getEnvDuration("HOST_INTERVAL", 2*time.Second),
+		FlakyAfter: getEnvInt("FLAKEY_AFTER", 2),
+		DeadAfter: getEnvInt("DEAD_AFTER", 4),
+		PendingDelay: getEnvDuration("PENDING_DELAY", 5 * time.Minute),
+		AliveDelay: getEnvDuration("ALIVE_DELAY", 24 * time.Hour),
+		DeadDelay: getEnvDuration("DEAD_DELAY", 7 * 24 * time.Hour),
+		BlockedDelay: getEnvDuration("BLOCKED_DELAY", 30 * time.Minute),
+
 	}
 }
 

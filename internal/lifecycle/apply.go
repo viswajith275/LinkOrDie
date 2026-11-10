@@ -8,6 +8,7 @@ import (
 
 	"link_or_die/internal/apperror"
 	"link_or_die/internal/checker"
+	"link_or_die/internal/config"
 	"link_or_die/internal/domains/links"
 
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ func Apply(
 	result checker.Result,
 	checkedAt time.Time,
 	leaseUntil time.Time,
+	cfg *config.Config,
 ) (Decision, error) {
 	if result.Canceled {
 		return Decision{}, context.Canceled
@@ -62,7 +64,7 @@ func Apply(
 	}
 
 	// decide next state and other based on it
-	decision := Decide(links.State(currentState), consecutiveFailures, result.Outcome)
+	decision := Decide(links.State(currentState), consecutiveFailures, result.Outcome, cfg)
 
 	var finalURL *string
 	if result.FinalURL != "" {
@@ -93,7 +95,7 @@ func Apply(
 		return decision, fmt.Errorf("insert check: %w", err)
 	}
 
-	nextCheckAt := checkedAt.Add(NextDelay(decision.NextState, result.Outcome))
+	nextCheckAt := checkedAt.Add(NextDelay(decision.NextState, result.Outcome, cfg))
 
 	_, err = tx.Exec(ctx, `
 		UPDATE links
