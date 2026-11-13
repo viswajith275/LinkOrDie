@@ -44,6 +44,7 @@ CREATE TABLE links (
 
 CREATE INDEX links_user_idx ON links (user_id, collection_id, state);
 CREATE INDEX links_due_idx  ON links (next_check_at);
+CREATE INDEX links_user_state_died_idx  ON links (user_id, state, died_at DESC NULLS LAST);
 CREATE TRIGGER update_links_modtime BEFORE UPDATE ON links
   FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
@@ -59,6 +60,7 @@ CREATE TABLE checks (
   error       TEXT
 );
 CREATE INDEX checks_link_idx ON checks (link_id, checked_at DESC);
+CREATE INDEX checks_checked_at_idx ON checks (checked_at DESC);
 
 CREATE TABLE transitions (
   id          BIGSERIAL PRIMARY KEY,
@@ -67,6 +69,9 @@ CREATE TABLE transitions (
   to_state    link_state NOT NULL,
   outcome     check_outcome,
   cause       check_outcome,
-  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  acknowledged_at TIMESTAMPTZ
+
 );
 CREATE INDEX transitions_link_idx ON transitions (link_id, occurred_at DESC);
+CREATE INDEX transitions_unacked_idx ON transitions (occurred_at DESC) WHERE to_state = 'alive' AND acknowledged_at IS NULL;

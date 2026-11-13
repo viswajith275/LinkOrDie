@@ -26,6 +26,7 @@ type Transition struct {
 	Outcome    *string
 	Cause      *string
 	OccurredAt time.Time
+	AcknowledgedAt time.Time
 }
 
 type View struct {
